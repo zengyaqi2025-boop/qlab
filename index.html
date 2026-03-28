@@ -598,7 +598,9 @@
     ═══════════════════════════════════ */
     #deep {
       position: fixed;
-      inset: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      max-width: 100vw;
       z-index: 100;
       background: var(--bg);
       transition: transform .35s cubic-bezier(.32,.72,0,1);
