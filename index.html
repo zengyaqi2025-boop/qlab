@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Q-Lab生命导航系统</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    button { border: none; background: none; cursor: pointer; font-family: inherit; }
+    ul { list-style: none; }
+
+    /* ── Design Tokens ── */
+    :root {
+      --bg:            #F0EEFA;
+      --primary:       #7C5CBF;
+      --primary-light: #EDE8F8;
+      --primary-border:#C9B8EC;
+      --green:         #4CAF82;
+      --green-light:   #E8F7F0;
+      --orange:        #F4A44A;
+      --orange-light:  #FEF3E7;
+      --white:         #FFFFFF;
+      --text-dark:     #1E1E2E;
+      --text-mid:      #555566;
+      --text-light:    #9999AA;
+      --radius:        16px;
+      --radius-sm:     10px;
+      --shadow:        0 2px 16px rgba(100,80,180,0.08);
+    }
+
+    /* ── Root layout ── */
+    body {
+      min-height: 100dvh;
+      background: #DDD4F0;
+      display: flex;
+      justify-content: center;
+      font-family: -apple-system, "PingFang SC", "Hiragino Sans GB",
+                   "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 390px;
+      min-height: 100dvh;
+      background: var(--bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 100dvh;
+    }
+    .screen.active { display: flex; }
+
+    /* ── Top Bar ── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 14px 16px 6px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .top-bar.has-stage { justify-content: space-between; }
+
+    .stage-tag {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 600;
+      background: var(--primary-light);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      color: var(--text-mid);
+      transition: background .15s;
+    }
+    .icon-btn:hover { background: rgba(0,0,0,.05); }
+
+    /* ── Scrollable content area ── */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 20px 100px;
+    }
+
+    /* ── Fixed bottom bar ── */
+    .bottom-bar {
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(to top, var(--bg) 80%, transparent);
+      padding: 12px 20px 24px;
+      flex-shrink: 0;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%;
+      height: 52px;
+      border-radius: var(--radius);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.98); opacity: .9; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .btn-primary:disabled {
+      background: #CCC;
+      cursor: not-allowed;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+    }
+    .btn-green {
+      background: var(--green);
+      color: var(--white);
+    }
+    .btn-green:disabled {
+      background: #A8D5BF;
+      cursor: not-allowed;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--primary);
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    /* ═══════════════════════════════════
+       SCREEN 1 — HOME
+    ═══════════════════════════════════ */
+    #home .scroll-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 32px 60px;
+    }
+
+    .home-sparkle {
+      position: relative;
+      width: 72px; height: 72px;
+      margin-bottom: 28px;
+    }
+    .home-sparkle svg {
+      width: 100%; height: 100%;
+    }
+
+    .home-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .home-sub {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .feature-list {
+      align-self: stretch;
+      margin-bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 15px;
+      color: var(--text-mid);
+    }
+
+    .feature-check {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-check svg { width: 11px; height: 11px; }
+
+    .home-cta { width: 100%; margin-bottom: 16px; }
+
+    .checkin-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--primary);
+      padding: 8px;
+    }
+
+    /* ═══════════════════════════════════
+       SCREEN 2 — QUIZ
+    ═══════════════════════════════════ */
+    .quiz-stage { display: none; }
+    .quiz-stage.active { display: block; }
+
+    .stage-heading {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 4px 0 24px;
+      line-height: 1.3;
+    }
+
+    .question-block { margin-bottom: 28px; }
+
+    .question-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    /* Radio options */
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: background .15s, border .15s;
+      border: 2px solid transparent;
+    }
+    .option-item:hover { border-color: var(--primary-border); }
+    .option-item.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .option-radio {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 2px solid #C0B8D8;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, background .15s;
+    }
+    .option-item.selected .option-radio {
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+    .option-radio-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: white;
+      display: none;
+    }
+    .option-item.selected .option-radio-dot { display: block; }
+
+    .option-text {
+      font-size: 15px;
+      color: var(--text-dark);
+      line-height: 1.4;
+    }
+
+    /* Slider */
+    .slider-wrap { padding: 8px 0; }
+
+    .slider-track {
+      position: relative;
+      height: 6px;
+      background: #DDD;
+      border-radius: 3px;
+      margin-bottom: 10px;
+    }
+    .slider-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width .1s;
+    }
+    .slider-thumb-wrap {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: left .1s;
+    }
+    .slider-thumb {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--primary);
+      box-shadow: 0 2px 8px rgba(124,92,191,.3);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: transparent;
+      outline: none;
+      position: relative;
+      z-index: 2;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--primary);
+      box-shadow: 0 2px 8px rgba(124,92,191,.35);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════
+       SCREEN 3 — RESULT
+    ═══════════════════════════════════ */
+    .result-type-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .type-emoji-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .type-emoji-icon {
+      font-size: 28px;
+    }
+
+    .type-name-block {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .type-main-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    .type-sub-name {
+      font-size: 16px;
+      color: var(--text-mid);
+      font-weight: 500;
+    }
+
+    .type-keywords {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .tag-section { margin-bottom: 10px; }
+    .tag-section-label {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .tag {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .tag-green { background: var(--green-light); color: #2E8057; }
+    .tag-orange { background: var(--orange-light); color: #C07020; }
+    .tag-dot { font-size: 10px; }
+
+    /* Deep-dive button */
+    .deep-btn {
+      width: 100%;
+      margin-bottom: 12px;
+      border: 1.5px dashed var(--primary-border);
+      border-radius: var(--radius);
+      background: transparent;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--primary);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .deep-btn:hover { background: var(--primary-light); }
+
+    /* Nav card */
+    .nav-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .nav-card-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .nav-card-icon {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+    .nav-card-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+
+    .nav-label { font-size: 12px; color: var(--text-light); margin-bottom: 6px; }
+    .nav-intention {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-dark);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .nav-action {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+    }
+
+    /* 7-day checklist */
+    .seven-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .seven-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .seven-icon { font-size: 18px; }
+    .seven-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+
+    .day-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F0F0F0;
+    }
+    .day-item:last-child { border-bottom: none; }
+    .day-num {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .day-text {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      padding-top: 3px;
+    }
+
+    /* Next step */
+    .next-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .next-header {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .next-text {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .btn-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .btn-row .btn { font-size: 14px; height: 44px; }
+
+    .wechat-cta {
+      background: #F7FBF9;
+      border: 1.5px solid var(--green);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-top: 4px;
+    }
+    .wechat-cta-text {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .wechat-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--green);
+      color: white;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      cursor: pointer;
+    }
+    .wechat-btn-label {
+      font-size: 13px;
+      opacity: .85;
+      flex-shrink: 0;
+    }
+    .wechat-id-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .wechat-id {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .wechat-note {
+      font-size: 12px;
+      opacity: .8;
+      font-weight: 400;
+    }
+
+    .result-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      padding: 8px 0 4px;
+    }
+
+    /* ═══════════════════════════════════
+       SCREEN 4 — DEEP ANALYSIS
+    ═══════════════════════════════════ */
+    #deep {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      transform: translateY(100%);
+      transition: transform .35s cubic-bezier(.32,.72,0,1);
+      display: flex !important; /* always in DOM */
+      flex-direction: column;
+      max-width: 390px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+    }
+    #deep.open {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .deep-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid #EEE;
+      flex-shrink: 0;
+    }
+    .deep-back {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-mid);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .deep-heading {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .deep-section { margin-bottom: 24px; }
+    .deep-section-head {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .deep-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .deep-dot-purple { background: var(--primary); }
+    .deep-dot-pink   { background: #E87EA1; }
+    .deep-section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .deep-body {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.75;
+    }
+    .deep-body p {
+      margin-bottom: 10px;
+    }
+    .deep-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .private-note {
+      background: var(--primary-light);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 16px;
+      margin-top: 8px;
+    }
+    .private-note p {
+      font-size: 14px;
+      color: var(--text-mid);
+      line-height: 1.9;
+    }
+
+    /* ═══════════════════════════════════
+       SCREEN 5 — CHECK-IN
+    ═══════════════════════════════════ */
+    .checkin-hero {
+      text-align: center;
+      padding: 20px 20px 0;
+    }
+    .checkin-hero-icon { font-size: 14px; color: var(--green); margin-bottom: 4px; }
+    .checkin-hero-title { font-size: 20px; font-weight: 700; color: var(--text-dark); margin-bottom: 20px; }
+
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .stat-card {
+      flex: 1;
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-label { font-size: 12px; color: var(--text-light); margin-bottom: 4px; }
+    .stat-num { font-size: 32px; font-weight: 700; color: var(--text-dark); line-height: 1; }
+    .stat-unit { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+
+    .checkin-status-btn {
+      width: 100%;
+      height: 52px;
+      border-radius: var(--radius);
+      font-size: 17px;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-bottom: 14px;
+      transition: .15s;
+    }
+    .checkin-status-btn.done {
+      background: #E8F7F0;
+      color: var(--green);
+      border: 1.5px solid var(--green);
+    }
+    .checkin-status-btn.pending {
+      background: var(--green);
+      color: white;
+    }
+
+    /* Task card */
+    .task-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .task-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .task-header-left { display: flex; align-items: center; gap: 8px; }
+    .task-icon { font-size: 16px; }
+    .task-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+    .task-count { font-size: 12px; color: var(--green); }
+
+    .task-type-badge {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 8px;
+    }
+    .task-type-emoji { font-size: 14px; }
+    .task-type-name { font-size: 12px; color: var(--text-light); }
+
+    .task-content {
+      font-size: 15px;
+      color: var(--text-dark);
+      font-weight: 500;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+
+    .task-complete-btn {
+      width: 100%;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: .15s;
+    }
+    .task-complete-btn.pending { background: var(--green); color: white; }
+    .task-complete-btn.done {
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    /* Calendar */
+    .cal-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .cal-month { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+    .cal-legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); }
+    .cal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+    .cal-grid {}
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      margin-bottom: 6px;
+    }
+    .cal-wd {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      padding: 4px 0;
+    }
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      color: var(--text-mid);
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+    }
+    .cal-day.checked {
+      background: var(--green-light);
+      color: var(--green);
+      font-weight: 600;
+    }
+    .cal-day.today {
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .cal-day.checked.today {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+    .cal-day.empty { pointer-events: none; }
+
+    /* Achievements */
+    .badge-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .badge-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .badge-title { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+    .badge-count { font-size: 13px; color: var(--text-light); }
+
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .badge-item {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .badge-icon {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: #F0F0F0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: .2s;
+    }
+    .badge-item.unlocked .badge-icon { background: #FFF8E1; }
+    .badge-name {
+      font-size: 11px;
+      color: var(--text-light);
+      text-align: center;
+      line-height: 1.3;
+    }
+    .badge-item.unlocked .badge-name { color: var(--text-mid); }
+
+    .return-btn {
+      text-align: center;
+      padding: 8px;
+      font-size: 15px;
+      color: var(--primary);
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    /* ── Utility ── */
+    .divider {
+      height: 1px;
+      background: #EEE;
+      margin: 16px 0;
+    }
+
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(0,0,0,.75);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════ HOME ═══════════════ -->
+  <div id="home" class="screen active">
+    <div class="top-bar">
+      <button class="icon-btn" style="font-size:20px;letter-spacing:2px">···</button>
+      <button class="icon-btn" style="font-size:22px;font-weight:300">×</button>
+    </div>
+    <div class="scroll-area" style="justify-content:center; display:flex; flex-direction:column; align-items:center; text-align:center; padding-bottom:48px;">
+      <!-- Sparkle icon -->
+      <div class="home-sparkle">
+        <svg viewBox="0 0 80 80" fill="none">
+          <!-- 主星 紫色 -->
+          <path d="M32 4 L35.5 27.5 L59 31 L35.5 34.5 L32 58 L28.5 34.5 L5 31 L28.5 27.5 Z" fill="#7C5CBF"/>
+          <!-- 次星 金色 -->
+          <path d="M56 18 L58 31 L71 33 L58 35 L56 48 L54 35 L41 33 L54 31 Z" fill="#F4B942"/>
+          <!-- 小金点 -->
+          <circle cx="18" cy="54" r="3.5" fill="#F4B942" opacity=".7"/>
+          <circle cx="65" cy="14" r="2" fill="#F4B942" opacity=".5"/>
+          <circle cx="10" cy="18" r="2" fill="#7C5CBF" opacity=".35"/>
+        </svg>
+      </div>
+
+      <h1 class="home-title">Q-Lab 生命导航系统</h1>
+      <p class="home-sub">找到你当下最适合的行动方式<br>获得专属行动指南</p>
+
+      <ul class="feature-list">
+        <li class="feature-item">
+          <span class="feature-check">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          3个简单阶段
+        </li>
+        <li class="feature-item">
+          <span class="feature-check">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          7种行动类型
+        </li>
+        <li class="feature-item">
+          <span class="feature-check">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          专属行动建议
+        </li>
+      </ul>
+
+      <button class="btn btn-primary home-cta" onclick="showScreen('quiz'); initQuiz()">开始测试</button>
+      <button class="checkin-link" onclick="showScreen('checkin'); initCheckin()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="3" width="12" height="11" rx="2" stroke="#7C5CBF" stroke-width="1.5"/>
+          <path d="M5 1v3M11 1v3M2 7h12" stroke="#7C5CBF" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        今日已签到
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ QUIZ ═══════════════ -->
+  <div id="quiz" class="screen">
+    <div class="top-bar has-stage">
+      <span id="stage-tag" class="stage-tag">阶段 1/3</span>
+      <div style="display:flex;gap:4px">
+        <button class="icon-btn" style="font-size:20px;letter-spacing:2px">···</button>
+        <button class="icon-btn" style="font-size:22px;font-weight:300" onclick="showScreen('home')">×</button>
+      </div>
+    </div>
+
+    <div class="scroll-area" id="quiz-scroll">
+
+      <!-- Stage 1: 现状感知 -->
+      <div id="stage1" class="quiz-stage active">
+        <h2 class="stage-heading">现状感知</h2>
+
+        <div class="question-block">
+          <p class="question-label">我目前最想改变的是哪一类？</p>
+          <div class="options" data-q="q1">
+            <div class="option-item" onclick="selectOption(this,'q1','健康')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">健康</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q1','金钱')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">金钱</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q1','事业')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">事业</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q1','关系')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">关系</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q1','自我状态')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">自我状态</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p class="question-label">最近的整体感受更接近哪一种？</p>
+          <div class="options" data-q="q2">
+            <div class="option-item" onclick="selectOption(this,'q2','焦虑')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">焦虑</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q2','用力')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">用力</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q2','麻木')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">麻木</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q2','期待但不确定')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">期待但不确定</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q2','相对平静')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">相对平静</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p class="question-label">我对现状的满意程度是</p>
+          <div class="slider-wrap">
+            <input type="range" id="q3-slider" min="1" max="10" value="5"
+              oninput="updateSlider(this)" data-q="q3">
+            <div class="slider-labels">
+              <span>1</span>
+              <span id="q3-val" style="color:var(--primary);font-weight:600">5</span>
+              <span>10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 2: 内在动力与阻力 -->
+      <div id="stage2" class="quiz-stage">
+        <h2 class="stage-heading">内在动力与阻力</h2>
+
+        <div class="question-block">
+          <p class="question-label">面对重要愿望时，我更常遇到的困难是</p>
+          <div class="options" data-q="q4">
+            <div class="option-item" onclick="selectOption(this,'q4','不敢真正要')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">不敢真正要</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q4','不知道从哪开始')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">不知道从哪开始</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q4','容易中断')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">容易中断</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q4','总是怀疑')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">总是怀疑</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p class="question-label">我更像哪种状态？</p>
+          <div class="options" data-q="q5">
+            <div class="option-item" onclick="selectOption(this,'q5','启动很快但容易累')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">启动很快但容易累</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q5','感受很多但不聚焦')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">感受很多但不聚焦</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q5','稳定但慢热')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">稳定但慢热</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q5','想法多但难落地')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">想法多但难落地</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q5','谨慎观望')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">谨慎观望</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p class="question-label">遇到挫折时，我通常会</p>
+          <div class="options" data-q="q6">
+            <div class="option-item" onclick="selectOption(this,'q6','立刻放弃')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">立刻放弃</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q6','短暂休息后继续')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">短暂休息后继续</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q6','分析原因再行动')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">分析原因再行动</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q6','寻求支持')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">寻求支持</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q6','默默承受')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">默默承受</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 3: 行动与支持偏好 -->
+      <div id="stage3" class="quiz-stage">
+        <h2 class="stage-heading">行动与支持偏好</h2>
+
+        <div class="question-block">
+          <p class="question-label">如果有人陪你前进，你更需要哪种支持？</p>
+          <div class="options" data-q="q7">
+            <div class="option-item" onclick="selectOption(this,'q7','方向感')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">方向感</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q7','情绪安抚')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">情绪安抚</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q7','具体步骤')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">具体步骤</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q7','节奏提醒')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">节奏提醒</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <p class="question-label">你更喜欢的行动方式是</p>
+          <div class="options" data-q="q8">
+            <div class="option-item" onclick="selectOption(this,'q8','立刻开始')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">立刻开始</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q8','先计划再行动')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">先计划再行动</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q8','小步试错')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">小步试错</span>
+            </div>
+            <div class="option-item" onclick="selectOption(this,'q8','观望确认')">
+              <span class="option-radio"><span class="option-radio-dot"></span></span>
+              <span class="option-text">观望确认</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /scroll-area -->
+
+    <div class="bottom-bar">
+      <button id="quiz-next-btn" class="btn btn-primary" onclick="quizNext()" disabled>继续</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════ RESULT ═══════════════ -->
+  <div id="result" class="screen">
+    <div class="top-bar">
+      <div style="flex:1"></div>
+      <button class="icon-btn" style="font-size:20px;letter-spacing:2px">···</button>
+      <button class="icon-btn" style="font-size:22px;font-weight:300" onclick="showScreen('home')">×</button>
+    </div>
+    <div class="scroll-area" id="result-scroll">
+
+      <!-- Type card -->
+      <div class="result-type-card">
+        <div class="type-emoji-row">
+          <span id="r-emoji" class="type-emoji-icon">🌬</span>
+          <div class="type-name-block">
+            <div id="r-name" class="type-main-name">风启型</div>
+            <div id="r-subname" class="type-sub-name">｜灵感者</div>
+          </div>
+        </div>
+        <p id="r-keywords" class="type-keywords">想法多｜视野广｜落地弱</p>
+
+        <div class="tag-section">
+          <div class="tag-row" id="r-strengths"></div>
+        </div>
+        <div style="margin-top:8px">
+          <div class="tag-row" id="r-cautions"></div>
+        </div>
+      </div>
+
+      <!-- Deep dive trigger -->
+      <button class="deep-btn" onclick="openDeep()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="#7C5CBF" stroke-width="1.5"/>
+          <path d="M8 5v4M8 11v.5" stroke="#7C5CBF" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        我想更深入看看
+      </button>
+
+      <!-- Today nav card -->
+      <div class="nav-card">
+        <div class="nav-card-header">
+          <div class="nav-card-icon"></div>
+          <span class="nav-card-title">今日专属导航卡</span>
+        </div>
+        <p class="nav-label">今日意图语</p>
+        <p id="r-intention" class="nav-intention">"今天，我选择从最小的一步开始"</p>
+        <p class="nav-label">微行动（15分钟内）</p>
+        <div id="r-action" class="nav-action">选一个想法，写下它的第一步是什么</div>
+      </div>
+
+      <!-- 7-day plan -->
+      <div class="seven-card">
+        <div class="seven-header">
+          <span class="seven-icon">📅</span>
+          <span class="seven-title">7天微行动清单</span>
+        </div>
+        <div id="r-seven"></div>
+      </div>
+
+      <!-- Next step -->
+      <div class="next-card">
+        <div class="next-header">→ 下一步</div>
+        <p class="next-text">你不需要一次到位。成长是一个过程，不是终点。每一个小行动都在积累能量，每一次觉察都在滋养自己。<br><br>当你愿意时，可以继续探索更系统的成长工具与陪伴支持。愿你的每一步，都温柔而坚定。</p>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="showScreen('quiz');initQuiz()">重新测试</button>
+          <button class="btn" style="border:1.5px solid var(--green);color:var(--green);background:transparent;font-size:14px;height:44px;" onclick="copyReport()">
+            📋 复制完整报告
+          </button>
+        </div>
+        <div class="wechat-cta">
+          <p class="wechat-cta-text">🌱 想把这张生命导航真正用起来吗？如果你愿意，把你的「行动类型」告诉我，我会送你一份【只属于你这一型的7天行动使用指南】</p>
+          <div class="wechat-btn">
+            <span class="wechat-btn-label">加我微信：</span>
+            <div class="wechat-id-block">
+              <span class="wechat-id">AureliaYaqi333</span>
+              <span class="wechat-note">备注：行动类型</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="result-footer">Q-Lab生命导航系统</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DEEP ANALYSIS ═══════════════ -->
+  <div id="deep">
+    <div class="deep-top">
+      <button class="deep-back" onclick="closeDeep()">←</button>
+      <span class="deep-heading" id="deep-heading">完整解析 · 风启型</span>
+    </div>
+    <div class="scroll-area" style="padding-top:20px">
+
+      <div class="deep-section">
+        <div class="deep-section-head">
+          <span class="deep-dot deep-dot-purple"></span>
+          <span class="deep-section-title">完整解析</span>
+        </div>
+        <p id="d-analysis" class="deep-body"></p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="deep-section">
+        <div class="deep-section-head">
+          <span class="deep-dot deep-dot-pink"></span>
+          <span class="deep-section-title">真实感受</span>
+        </div>
+        <p id="d-feelings" class="deep-body"></p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="deep-section">
+        <div class="deep-section-head">
+          <span class="deep-dot deep-dot-purple"></span>
+          <span class="deep-section-title">私密陪伴语</span>
+        </div>
+        <div class="private-note">
+          <p id="d-private"></p>
+        </div>
+      </div>
+
+      <div style="padding:0 0 8px">
+        <button class="btn btn-primary" onclick="closeDeep()">我收到了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CHECK-IN ═══════════════ -->
+  <div id="checkin" class="screen">
+    <div class="top-bar">
+      <div style="flex:1"></div>
+      <button class="icon-btn" style="font-size:20px;letter-spacing:2px">···</button>
+      <button class="icon-btn" style="font-size:22px;font-weight:300" onclick="showScreen('home')">×</button>
+    </div>
+
+    <div class="scroll-area">
+      <div class="checkin-hero">
+        <div class="checkin-hero-icon">📅 每日签到</div>
+        <h2 class="checkin-hero-title">过上你想要的人生</h2>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">连续签到</div>
+          <div id="ci-streak" class="stat-num">0</div>
+          <div class="stat-unit">天</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">累计签到</div>
+          <div id="ci-total" class="stat-num">0</div>
+          <div class="stat-unit">天</div>
+        </div>
+      </div>
+
+      <!-- Check-in button -->
+      <button id="ci-btn" class="checkin-status-btn pending" onclick="doCheckin()">
+        <span id="ci-btn-text">签到</span>
+      </button>
+
+      <!-- Task card -->
+      <div class="task-card">
+        <div class="task-header">
+          <div class="task-header-left">
+            <span class="task-icon">📋</span>
+            <span class="task-title">今日行动小任务</span>
+          </div>
+          <span id="ci-task-count" class="task-count">本周完成 0 个</span>
+        </div>
+        <div class="task-type-badge">
+          <span id="ci-type-emoji" class="task-type-emoji">🌬</span>
+          <span id="ci-type-name" class="task-type-name">风启型｜灵感者</span>
+        </div>
+        <p id="ci-task-content" class="task-content">完成一个小任务</p>
+        <button id="ci-task-btn" class="task-complete-btn pending" onclick="completeTask()">
+          <span>☑ 标记为已完成</span>
+        </button>
+      </div>
+
+      <!-- Calendar -->
+      <div class="cal-card">
+        <div class="cal-header">
+          <span id="cal-month-label" class="cal-month">2026年3月</span>
+          <div class="cal-legend"><span class="cal-dot"></span>已签到</div>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-weekdays">
+            <div class="cal-wd">日</div><div class="cal-wd">一</div>
+            <div class="cal-wd">二</div><div class="cal-wd">三</div>
+            <div class="cal-wd">四</div><div class="cal-wd">五</div>
+            <div class="cal-wd">六</div>
+          </div>
+          <div id="cal-days" class="cal-days"></div>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="badge-card">
+        <div class="badge-header">
+          <span class="badge-title">🏆 成就徽章</span>
+          <span id="badge-count" class="badge-count">0/8</span>
+        </div>
+        <div class="badge-grid" id="badge-grid"></div>
+      </div>
+
+      <div class="return-btn" onclick="showScreen('home')">返回首页</div>
+
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ─── 七种类型完整数据 ──────────────────────────────────────
+const TYPES = {
+  fire: {
+    key: 'fire', emoji: '🔥', name: '火焰型', sub: '启动者',
+    keywords: '点火快｜行动力强｜容易透支',
+    strengths: ['启动速度快', '敢要、敢冲、不怕尝试'],
+    cautions:  ['用力过猛，容易三分钟热度后自责', '把显化当成「拼一把」'],
+    intention: '「我允许力量慢一点，也同样有效。」',
+    action:    '今天只完成一个最小动作，完成后立刻停下。',
+    seven: ['选定一个目标，只写一句话','为目标做一个10分钟准备',
+            '休息 / 不做任何推进','推进15分钟','记录身体感受',
+            '复盘：什么让我耗能？','给自己一次奖励'],
+    analysis: '你的能量像火，明亮、热烈、让人感到温暖和力量。你是那种「决定了就动」的人，这是很多人羡慕却做不到的天赋。你敢要、敢冲、不怕失败，这种勇气本身就是一种显化能力。\n\n但火需要燃料。你的挑战不在于如何点燃，而在于如何持续燃烧而不耗尽自己。当你学会在行动中留出喘息的空间，你会发现——慢下来的火，反而烧得更久、更稳、更有力量。',
+    feelings: '你常常感到自己比别人更拼、更努力，但也比别人更快感到耗尽。你一次又一次地点燃自己，又一次又一次地发现力气用完了。你问过自己：我已经这么努力了，为什么还是没到？是不是我不够好？其实不是。是你把所有的力都押在了「冲刺」上，却忘了，你也需要被好好对待。',
+    private:  '亲爱的火，你的热烈是这个世界需要的。但我想轻轻提醒你——你不需要靠燃烧来证明自己值得被看见。你停下来的那一刻，你的光并没有消失，它只是在充电。允许自己慢一次，不是退缩，是为了下一次燃烧得更真实。相信你的节奏，相信休息也是显化的一部分。'
+  },
+  water: {
+    key: 'water', emoji: '💧', name: '水流型', sub: '感受者',
+    keywords: '共振强｜直觉准｜容易分散',
+    strengths: ['与潜意识、灵感高度连接', '适合显化「关系、疗愈、创意」'],
+    cautions:  ['容易迷失在别人的期待里', '情绪一波动，方向就变'],
+    intention: '「今天，我只回应一个最重要的感受。」',
+    action:    '写下一件你真正想要的事，其余先不管。',
+    seven: ['记录情绪关键词','删掉一个不重要的期待',
+            '设一个边界（拒绝一次）','专注一件事20分钟',
+            '写下「我真正想要的是…」','减少输入（少刷）','回顾最有力量的一天'],
+    analysis: '你的能量像水，流动、细腻、能渗透进任何缝隙。你对人、对情绪、对环境的感知力异常敏锐，这让你天然擅长连接、疗愈和创造。你的直觉往往比逻辑更快到达真相。\n\n但水如果没有河道，会向四面八方漫开，最终变浅、失去方向。你的挑战不是感受不够深，而是如何在丰富的感受中，找到那一个最值得流向的方向，让能量真正聚拢成河。',
+    feelings: '你常常感到自己被太多东西牵动——别人的情绪、外界的声音、内心此起彼伏的念头。你有时候分不清，这个想法是你真正的渴望，还是只是被某个人或某件事触发的波动？你问过自己：我到底想要什么？为什么我那么容易被带走？其实不是你软弱，是你的感受力太强，还没有人教过你怎么用它。',
+    private:  '亲爱的水，你的感受力是礼物，不是负担。当你停止为别人的情绪负责，当你把那些漂流在外的注意力收回来，你会发现自己拥有一种非常稳定的力量。你不需要感受更少，你只需要学会为自己的感受建一条河道。选一个方向，让自己流进去。你比你以为的，更有方向感。'
+  },
+  earth: {
+    key: 'earth', emoji: '🌱', name: '土壤型', sub: '孕育者',
+    keywords: '稳定｜长期｜慢热但扎实',
+    strengths: ['极强的持续力', '适合显化长期目标（财富、事业、孩子）'],
+    cautions:  ['启动慢，容易等「准备好」', '低估自己的力量'],
+    intention: '「我正在慢慢，但确定地前进。」',
+    action:    '完成一个已经开始过的步骤。',
+    seven: ['整理现有资源','完成一个旧任务','记录已完成清单',
+            '小步推进10分钟','向他人确认一次进展',
+            '允许「今天不推进」','回看你已走多远'],
+    analysis: '你的能量像土壤，深厚、沉稳、孕育一切生长。你不是那种爆发式的人，但你有一种很多人没有的能力——你能承托住长期的事物，让它们在你这里慢慢生根、发芽。这是一种被严重低估的显化力量。\n\n你的挑战不是能力不足，而是常常在真正出发之前，把太多时间花在「还没准备好」上。其实你早就准备好了。土壤不需要等到完美才能让种子发芽，你也不需要。',
+    feelings: '你常常感到自己走得很慢，慢到有时候怀疑自己是不是根本没在动。你看别人好像跑得那么快、那么猛，你开始问自己：是我太保守了吗？我是不是错过什么了？但其实，你一直都在——你只是在用自己的方式，默默地、扎实地往前走。你的积累是真实的，只是你自己没有数清楚。',
+    private:  '亲爱的土壤，我想让你知道——你已经做到的，比你以为的多得多。那些「不起眼」的坚持，那些「算不上什么」的小步骤，它们都是真实的积累。你不需要变成火，也不需要变成风，你就是你，而你这种方式，能长出最深根的东西。相信慢，相信稳，相信你走的每一步都算数。'
+  },
+  wind: {
+    key: 'wind', emoji: '🌬', name: '风启型', sub: '灵感者',
+    keywords: '想法多｜视野广｜落地弱',
+    strengths: ['灵感密集，容易抓住趋势与机会', '适合「构想型显化」'],
+    cautions:  ['落地困难，想法堆积', '容易怀疑「哪个才是真的我？」'],
+    intention: '「今天，我只选择一个方向。」',
+    action:    '选一个想法，写下它的第一步是什么。',
+    seven: ['列出所有想法','只保留一个','删掉三个干扰',
+            '执行第一步','记录卡点','简化方案',
+            '确认「我还要不要继续？」'],
+    analysis: '你的能量像风，自由而轻盈，能够到达任何地方。你的灵感是你的天赋，你总是能看到别人看不到的可能性。然而，风如果没有方向，会四处飘散，最终消失在空中。\n\n你的挑战在于学会「收敛与落地」。不是变成静止的空气，而是成为有方向的风。当你能够选择一个想法，专注于它，将它拆解成可执行的小步骤，你的风将更有力量，能够真正地推动事物前进。',
+    feelings: '你常常感到自己被无数个想法包围，每一个都那么吸引人，每一个都让你心动。你害怕错过任何一个好想法，害怕选择了一个就会失去其他。你可能在深夜问过自己：为什么我总是开始却无法完成？为什么我有这么多想法，却无法实现任何一个？',
+    private:  '亲爱的风，我知道你的灵感有多丰富，多渴望探索所有的可能性。但请记住，不是所有想法都需要同时被实现。选择一个，专注它，完成它，这比同时开始十个却一个都没完成要好得多。你的想法是你的礼物，但只有落地，它才能真正成为现实。相信你的选择，相信你的执行能力。'
+  },
+  star: {
+    key: 'star', emoji: '⭐', name: '星核型', sub: '意义驱动者',
+    keywords: '使命感｜意义感｜为「对的事」而动',
+    strengths: ['显化一旦启动，力量极强', '能吸引志同道合的人与资源'],
+    cautions:  ['容易卡在「还没想清楚意义」', '行动前内耗严重'],
+    intention: '「今天，让意义通过行动显现。」',
+    action:    '做一件与你价值观一致的小事。',
+    seven: ['写下「我为什么要这个？」','连接一个人','输出一段表达',
+            '行动20分钟','确认是否仍有意义','修正方向','整合一条长期主线'],
+    analysis: '你的能量像星核，高密度、高温度，一旦点燃，能照亮很远的地方。你不是一个「随便行动」的人，你需要感到「这件事有意义」才能真正投入——而一旦投入，你的能量释放的量级，往往连你自己都会震惊。\n\n但意义感有时候会成为一道门槛。你的挑战在于：不要等到「完全想清楚意义」才开始行动。意义不是等来的，它是在行动中被一点点确认的。先动，方向会越来越清晰。',
+    feelings: '你常常感到自己对很多事情「提不起劲」，不是懒，而是感觉不到它和你真正想要的东西有什么关系。你有很高的标准，对自己，对这件事，对「值不值得」。你问过自己：我是不是要求太多了？为什么我总是在内耗而不是行动？其实是因为你的能量需要对准才能流动，你不是慢，你是在寻找入口。',
+    private:  '亲爱的星核，你的使命感是真实的，你对意义的渴望是你最宝贵的驱动力。但我想轻轻说——你不需要在行动前就看清全部意义。有时候，一个小行动，就是点燃方向感的那根火柴。相信你的感知，也相信「先走一步」的勇气。你的意义，会在路上等你。'
+  },
+  moon: {
+    key: 'moon', emoji: '🌙', name: '月影型', sub: '安全寻求者',
+    keywords: '谨慎｜自我保护｜怕失望',
+    strengths: ['觉察力强，不容易冲动犯错', '非常细腻'],
+    cautions:  ['不敢真正要，容易停在「想象阶段」', '行动前自我否定'],
+    intention: '「我在安全中，向前一点点。」',
+    action:    '选择一个几乎不会失败的动作。',
+    seven: ['设一个极低门槛目标','完成它','记录成功感',
+            '重复一次','微调提升','告诉一个可信任的人','回顾信心变化'],
+    analysis: '你的能量像月亮，柔和、细腻、在安静中散发出独特的光。你的觉察力极强，能感受到别人感受不到的细节，能看到风险、看到复杂性、看到「万一」。这不是软弱，这是一种深度的内在智慧。\n\n你的挑战在于，这份觉察有时候会把自己保护得太紧，让真正想要的东西被关在门外。你不需要消灭小心，而是在小心的同时，也允许自己伸出手，试探一步——哪怕只是很小的一步。',
+    feelings: '你常常感到「想要」和「怕失望」同时存在，两股力量拉扯着你，让你停在原地。你不是不想前进，你只是太知道失望是什么感觉了，所以宁愿不开始，也不想再经历一次落空。你问过自己：我是不是根本不配拥有这个？如果我真的去要了，会不会又是一场空？你值得被回应，这一点，不需要你先证明。',
+    private:  '亲爱的月影，我看见你有多想要，也看见你有多害怕受伤。这两件事都是真实的，都没有错。你不需要变得大胆才能前进，你只需要允许自己，在安全的范围内，多伸出一点点。每一个小小的成功，都是你重建信任的证据——对世界的信任，也对自己的信任。你值得好事发生。'
+  },
+  sun: {
+    key: 'sun', emoji: '☀️', name: '日常型', sub: '现实整合者',
+    keywords: '生活感｜执行力｜系统感',
+    strengths: ['执行稳定，适合显化「可持续人生状态」', '相信日常积累的力量'],
+    cautions:  ['容易忽略内在感受', '对「愿望」不够大胆'],
+    intention: '「我允许日常，也承载梦想。」',
+    action:    '给今天的生活加一个小小愉悦点。',
+    seven: ['优化一个日常流程','为梦想留10分钟','写下一个「如果可以…」',
+            '尝试新方法','把梦想放进日程','记录改变','为自己庆祝'],
+    analysis: '你的能量像阳光，稳定、真实、每天都在。你相信积累，相信日常，相信看得见摸得着的进展——这让你拥有一种很多人缺少的脚踏实地的力量。你的显化不靠爆发，靠的是一天一天、一件一件真实地活着。\n\n你的挑战不是行动力，而是「敢想」。你有时候会在内心提前过滤掉那些「太大」或「太不现实」的愿望，但显化需要你先允许自己想。你的执行力是宝贵的引擎，它需要一个更大的目的地。',
+    feelings: '你常常感到自己活得挺好，但有时候又隐约觉得，好像还缺点什么——一种更深的满足感，或者一个让自己真正兴奋的方向。你不是不知足，你只是开始感觉到，日常之外，还有一些什么在等你。你问过自己：我是不是太务实了？我有没有资格去想那些「不实际」的事？你有，务实和做梦从来不是对立的。',
+    private:  '亲爱的日光，你把生活打理得这么好，这本身就是一种了不起的能力。现在，我想邀请你做一件事：允许自己想一个「大一点」的愿望，哪怕暂时不知道怎么实现。你的脚踏实地不会消失，它会成为承载梦想的地基。相信你的日常，也相信你的梦想——它们可以住在同一个人身上。'
+  }
+};
+
+// ─── 评分矩阵 ─────────────────────────────────────────────
+const SCORING = {
+  q1: { '健康':{ sun:2 }, '金钱':{ sun:2 }, '事业':{ star:1 }, '关系':{ water:1 }, '自我状态':{ moon:1 } },
+  q2: { '焦虑':{ moon:1, fire:1 }, '用力':{ fire:2 }, '麻木':{ water:1, sun:1 },
+        '期待但不确定':{ star:1, wind:1 }, '相对平静':{ earth:1, sun:2 } },
+  q4: { '不敢真正要':{ moon:3 }, '不知道从哪开始':{ wind:2, star:1 },
+        '容易中断':{ fire:2, water:1 }, '总是怀疑':{ star:3, moon:1 } },
+  q5: { '启动很快但容易累':{ fire:5 }, '感受很多但不聚焦':{ water:5 },
+        '稳定但慢热':{ earth:5 }, '想法多但难落地':{ wind:5 }, '谨慎观望':{ moon:3, star:2 } },
+  q6: { '立刻放弃':{ moon:2 }, '短暂休息后继续':{ fire:1, water:1 },
+        '分析原因再行动':{ star:3 }, '寻求支持':{ water:2 }, '默默承受':{ earth:1, sun:3 } },
+  q7: { '方向感':{ wind:2, star:1 }, '情绪安抚':{ water:2, moon:1 },
+        '具体步骤':{ earth:2, sun:2 }, '节奏提醒':{ fire:2, sun:1 } },
+  q8: { '立刻开始':{ fire:3 }, '先计划再行动':{ sun:3, earth:1 },
+        '小步试错':{ moon:2, earth:1 }, '观望确认':{ moon:2, star:1 } }
+};
+
+// ─── 状态 ──────────────────────────────────────────────────
+let currentStage = 1;
+let answers = { q1:null, q2:null, q3:5, q4:null, q5:null, q6:null, q7:null, q8:null };
+let currentTypeKey = localStorage.getItem('qlab_type') || null;
+
+// ─── 页面切换 ──────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('active');
+    const sa = el.querySelector('.scroll-area');
+    if (sa) sa.scrollTop = 0;
+  }
+}
+
+// ─── 问卷 ──────────────────────────────────────────────────
+function initQuiz() {
+  currentStage = 1;
+  answers = { q1:null, q2:null, q3:5, q4:null, q5:null, q6:null, q7:null, q8:null };
+  document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+  const sl = document.getElementById('q3-slider');
+  sl.value = 5; updateSlider(sl);
+  setStage(1);
+}
+
+function setStage(n) {
+  currentStage = n;
+  document.querySelectorAll('.quiz-stage').forEach(s => s.classList.remove('active'));
+  document.getElementById('stage' + n).classList.add('active');
+  document.getElementById('stage-tag').textContent = '阶段 ' + n + '/3';
+  const btn = document.getElementById('quiz-next-btn');
+  btn.textContent = n === 3 ? '查看结果' : '继续';
+  updateNextBtn();
+  const sa = document.getElementById('quiz-scroll');
+  if (sa) sa.scrollTop = 0;
+}
+
+function selectOption(el, q, val) {
+  el.closest('[data-q="' + q + '"]')
+    .querySelectorAll('.option-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[q] = val;
+  updateNextBtn();
+}
+
+function updateSlider(input) {
+  answers.q3 = parseInt(input.value);
+  document.getElementById('q3-val').textContent = input.value;
+}
+
+function stageComplete() {
+  if (currentStage === 1) return !!(answers.q1 && answers.q2);
+  if (currentStage === 2) return !!(answers.q4 && answers.q5 && answers.q6);
+  if (currentStage === 3) return !!(answers.q7 && answers.q8);
+  return false;
+}
+
+function updateNextBtn() {
+  document.getElementById('quiz-next-btn').disabled = !stageComplete();
+}
+
+function quizNext() {
+  if (!stageComplete()) return;
+  if (currentStage < 3) { setStage(currentStage + 1); return; }
+  currentTypeKey = calculateType();
+  localStorage.setItem('qlab_type', currentTypeKey);
+  renderResult(currentTypeKey);
+  showScreen('result');
+}
+
+// ─── 评分计算 ─────────────────────────────────────────────
+function calculateType() {
+  const s = { fire:0, water:0, earth:0, wind:0, star:0, moon:0, sun:0 };
+  ['q1','q2','q4','q5','q6','q7','q8'].forEach(q => {
+    const v = answers[q];
+    if (v && SCORING[q]?.[v])
+      Object.entries(SCORING[q][v]).forEach(([t, p]) => { s[t] = (s[t]||0) + p; });
+  });
+  // 滑块 q3
+  const v3 = answers.q3;
+  if (v3 <= 3) s.moon += 1; else if (v3 <= 6) s.earth += 1; else s.fire += 1;
+  // 取最高分
+  return Object.entries(s).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+}
+
+// ─── 结果页渲染 ───────────────────────────────────────────
+function renderResult(key) {
+  const t = TYPES[key];
+  document.getElementById('r-emoji').textContent    = t.emoji;
+  document.getElementById('r-name').textContent     = t.name;
+  document.getElementById('r-subname').textContent  = '｜' + t.sub;
+  document.getElementById('r-keywords').textContent = t.keywords;
+
+  document.getElementById('r-strengths').innerHTML =
+    t.strengths.map(s => `<span class="tag tag-green"><span class="tag-dot">+</span>${s}</span>`).join('');
+  document.getElementById('r-cautions').innerHTML =
+    t.cautions.map(c => `<span class="tag tag-orange"><span class="tag-dot">!</span>${c}</span>`).join('');
+
+  document.getElementById('r-intention').textContent = t.intention;
+  document.getElementById('r-action').textContent    = t.action;
+
+  document.getElementById('r-seven').innerHTML =
+    t.seven.map((item, i) =>
+      `<div class="day-item"><span class="day-num">${i+1}</span><span class="day-text">${item}</span></div>`
+    ).join('');
+
+  // 深度解析数据
+  const toParas = str => str.split('\n\n').map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  document.getElementById('deep-heading').textContent = '完整解析 · ' + t.name;
+  document.getElementById('d-analysis').innerHTML = toParas(t.analysis);
+  document.getElementById('d-feelings').innerHTML = toParas(t.feelings);
+  document.getElementById('d-private').innerHTML  = toParas(t.private);
+}
+
+// ─── 深度解析 ─────────────────────────────────────────────
+function openDeep() { document.getElementById('deep').classList.add('open'); }
+function closeDeep() { document.getElementById('deep').classList.remove('open'); }
+
+// ─── 复制报告 ─────────────────────────────────────────────
+function copyReport() {
+  if (!currentTypeKey) { showToast('请先完成测试'); return; }
+  const t = TYPES[currentTypeKey];
+  const text =
+`【Q-Lab 生命导航系统 · 专属报告】
+
+${t.emoji} ${t.name}｜${t.sub}
+关键词：${t.keywords}
+
+✅ 优势
+${t.strengths.map(s => '· ' + s).join('\n')}
+
+⚠️ 注意
+${t.cautions.map(c => '· ' + c).join('\n')}
+
+💡 今日意图语
+${t.intention}
+
+🎯 今日微行动
+${t.action}
+
+📅 7天行动清单
+${t.seven.map((s,i) => `Day${i+1}: ${s}`).join('\n')}
+
+📱 加微信获取专属7天指南：AureliaYaqi333（备注：行动类型）`;
+
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('报告已复制 ✓'))
+    .catch(() => showToast('复制失败，请手动截图'));
+}
+
+// ─── 每日签到 ─────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0, 10); }
+
+function getData() {
+  return {
+    type:      localStorage.getItem('qlab_type') || null,
+    checkins:  JSON.parse(localStorage.getItem('qlab_checkins') || '[]'),
+    tasksDone: JSON.parse(localStorage.getItem('qlab_tasks')    || '[]')
+  };
+}
+function saveData(d) {
+  if (d.type) localStorage.setItem('qlab_type', d.type);
+  localStorage.setItem('qlab_checkins', JSON.stringify(d.checkins));
+  localStorage.setItem('qlab_tasks',    JSON.stringify(d.tasksDone));
+}
+
+function calcStreak(checkins) {
+  if (!checkins.length) return 0;
+  const set = new Set(checkins);
+  let streak = 0, d = new Date();
+  // 如果今天没签到，从昨天开始算
+  if (!set.has(d.toISOString().slice(0,10))) d.setDate(d.getDate() - 1);
+  while (true) {
+    const ds = d.toISOString().slice(0, 10);
+    if (set.has(ds)) { streak++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  return streak;
+}
+
+function weekTaskCount(tasksDone) {
+  const now = new Date();
+  const sun = new Date(now); sun.setDate(now.getDate() - now.getDay()); sun.setHours(0,0,0,0);
+  return tasksDone.filter(ds => new Date(ds) >= sun).length;
+}
+
+function initCheckin() {
+  const d = getData();
+  const typeKey = d.type || currentTypeKey;
+  const t = typeKey && TYPES[typeKey] ? TYPES[typeKey] : null;
+  const tod = today();
+
+  document.getElementById('ci-streak').textContent = calcStreak(d.checkins);
+  document.getElementById('ci-total').textContent  = d.checkins.length;
+
+  // 签到按钮
+  const ciBtn  = document.getElementById('ci-btn');
+  const ciText = document.getElementById('ci-btn-text');
+  const didCheckIn = d.checkins.includes(tod);
+  ciBtn.className = 'checkin-status-btn ' + (didCheckIn ? 'done' : 'pending');
+  ciText.textContent = didCheckIn ? '✓ 今日已签到' : '签到';
+
+  // 任务
+  document.getElementById('ci-type-emoji').textContent = t ? t.emoji : '✨';
+  document.getElementById('ci-type-name').textContent  = t ? (t.name + '｜' + t.sub) : '今日小任务';
+  document.getElementById('ci-task-content').textContent = t ? t.action : '给今天加一个小小的愉悦点。';
+  document.getElementById('ci-task-count').textContent  = '本周完成 ' + weekTaskCount(d.tasksDone) + ' 个';
+
+  const taskDone = d.tasksDone.includes(tod);
+  const taskBtn  = document.getElementById('ci-task-btn');
+  taskBtn.className = 'task-complete-btn ' + (taskDone ? 'done' : 'pending');
+  taskBtn.innerHTML  = taskDone ? '<span>✓ 任务完成!</span>' : '<span>☑ 标记为已完成</span>';
+
+  renderCalendar(d.checkins);
+  renderBadges(d);
+}
+
+function doCheckin() {
+  const d = getData(), tod = today();
+  if (d.checkins.includes(tod)) return;
+  d.checkins.push(tod);
+  saveData(d);
+  showToast('签到成功 ✓');
+  initCheckin();
+}
+
+function completeTask() {
+  const d = getData(), tod = today();
+  if (d.tasksDone.includes(tod)) return;
+  d.tasksDone.push(tod);
+  saveData(d);
+  showToast('任务完成 ✓');
+  initCheckin();
+}
+
+// ─── 日历 ─────────────────────────────────────────────────
+function renderCalendar(checkins) {
+  const now   = new Date();
+  const year  = now.getFullYear();
+  const month = now.getMonth();
+  const todD  = now.getDate();
+  const set   = new Set(checkins);
+
+  document.getElementById('cal-month-label').textContent =
+    year + '年' + (month + 1) + '月';
+
+  const firstWeekday  = new Date(year, month, 1).getDay();
+  const daysInMonth   = new Date(year, month + 1, 0).getDate();
+  const container     = document.getElementById('cal-days');
+  container.innerHTML = '';
+
+  for (let i = 0; i < firstWeekday; i++) {
+    const e = document.createElement('div');
+    e.className = 'cal-day empty'; container.appendChild(e);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds  = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const el  = document.createElement('div');
+    let cls   = 'cal-day';
+    if (set.has(ds)) cls += ' checked';
+    if (d === todD)  cls += ' today';
+    el.className = cls;
+    el.textContent = d;
+    container.appendChild(el);
+  }
+}
+
+// ─── 成就徽章 ─────────────────────────────────────────────
+const BADGES = [
+  { icon:'🌟', name:'初次行动', check: d => d.tasksDone.length >= 1 },
+  { icon:'🔥', name:'连续3天',  check: d => calcStreak(d.checkins) >= 3 },
+  { icon:'💪', name:'一周坚持', check: d => calcStreak(d.checkins) >= 7 },
+  { icon:'🏆', name:'两周坚持', check: d => calcStreak(d.checkins) >= 14 },
+  { icon:'⭐', name:'积累10次', check: d => d.tasksDone.length >= 10 },
+  { icon:'🌙', name:'积累30次', check: d => d.tasksDone.length >= 30 },
+  { icon:'✨', name:'积累50次', check: d => d.tasksDone.length >= 50 },
+  { icon:'🌈', name:'完美一周', check: d => {
+    const s = [...d.tasksDone].sort();
+    let max=0, cur=0, prev=null;
+    s.forEach(ds => {
+      if (prev && (new Date(ds)-new Date(prev))/86400000 === 1) max = Math.max(max, ++cur);
+      else cur = 1;
+      prev = ds;
+    });
+    return Math.max(max, cur) >= 7;
+  }}
+];
+
+function renderBadges(data) {
+  let unlocked = 0;
+  document.getElementById('badge-grid').innerHTML = BADGES.map(b => {
+    const ok = b.check(data); if (ok) unlocked++;
+    return `<div class="badge-item ${ok?'unlocked':''}">
+      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-name">${b.name}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('badge-count').textContent = unlocked + '/8';
+}
+
+// ─── Toast ────────────────────────────────────────────────
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+
+// ─── 初始化 ───────────────────────────────────────────────
+updateSlider(document.getElementById('q3-slider'));
+// 首页签到按钮：如果今天已签到，更新文案
+(function() {
+  const d = getData();
+  const link = document.querySelector('.checkin-link');
+  if (link && d.checkins.includes(today())) {
+    link.innerHTML = link.innerHTML.replace('今日已签到', '✓ 今日已签到');
+  }
+})();
+</script>
+</body>
+</html>
