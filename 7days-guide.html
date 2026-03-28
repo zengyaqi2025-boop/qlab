@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Q-Lab · 7天专属行动指南</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: #F0EEFA;
+    color: #2d2d2d;
+    min-height: 100vh;
+  }
+
+  /* ── 选择页 ── */
+  #selector-page {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 48px 24px 60px;
+    text-align: center;
+  }
+  .logo-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin-bottom: 8px;
+  }
+  .logo-text { font-size: 18px; font-weight: 700; color: #7C5CBF; letter-spacing: .04em; }
+  .sel-title { font-size: 22px; font-weight: 700; color: #2d2d2d; margin-bottom: 8px; }
+  .sel-sub { font-size: 14px; color: #888; margin-bottom: 36px; line-height: 1.6; }
+  .type-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px;
+  }
+  .type-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 12px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all .2s;
+    box-shadow: 0 2px 12px rgba(124,92,191,.08);
+  }
+  .type-card:hover { border-color: #7C5CBF; transform: translateY(-2px); }
+  .type-card.selected { border-color: #7C5CBF; background: #F5F0FF; }
+  .type-card .emoji { font-size: 28px; margin-bottom: 6px; }
+  .type-card .cname { font-size: 15px; font-weight: 700; color: #2d2d2d; }
+  .type-card .csub  { font-size: 12px; color: #7C5CBF; margin-top: 2px; }
+  .start-btn {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #7C5CBF, #9B79D8);
+    color: white; font-size: 16px; font-weight: 700;
+    border: none; border-radius: 50px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(124,92,191,.3);
+    transition: opacity .2s;
+  }
+  .start-btn:hover { opacity: .9; }
+  .start-btn:disabled { opacity: .4; cursor: default; }
+
+  /* ── 指南页 ── */
+  #guide-page { display: none; max-width: 480px; margin: 0 auto; }
+
+  /* 封面 */
+  .cover {
+    background: linear-gradient(160deg, #7C5CBF 0%, #5A3FA0 100%);
+    color: white;
+    padding: 56px 32px 48px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(244,185,66,.15);
+  }
+  .cover::after {
+    content: '';
+    position: absolute; bottom: -40px; left: -40px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(244,185,66,.25);
+    color: #F4B942;
+    font-size: 12px; font-weight: 700;
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 20px; letter-spacing: .08em;
+  }
+  .cover-emoji { font-size: 56px; margin-bottom: 12px; position: relative; z-index: 1; }
+  .cover-type { font-size: 28px; font-weight: 800; margin-bottom: 4px; position: relative; z-index: 1; }
+  .cover-sub  { font-size: 16px; opacity: .85; margin-bottom: 20px; position: relative; z-index: 1; }
+  .cover-keywords {
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .kw-tag {
+    background: rgba(255,255,255,.18);
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px;
+  }
+  .cover-footer {
+    margin-top: 28px; font-size: 13px; opacity: .7;
+    position: relative; z-index: 1;
+  }
+
+  /* 内容区 */
+  .guide-body { padding: 0 20px 60px; background: #F0EEFA; }
+
+  /* 意图卡 */
+  .intention-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 20px;
+    margin: 20px 0 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(124,92,191,.08);
+  }
+  .intention-label { font-size: 11px; color: #7C5CBF; font-weight: 700; letter-spacing: .1em; margin-bottom: 8px; }
+  .intention-text  { font-size: 17px; font-weight: 700; color: #2d2d2d; line-height: 1.5; }
+
+  /* 段落标题 */
+  .section-label {
+    font-size: 11px; color: #7C5CBF; font-weight: 700;
+    letter-spacing: .1em; margin: 20px 0 10px;
+  }
+
+  /* 日卡片 */
+  .day-card {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(124,92,191,.07);
+  }
+  .day-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #F0EEFA;
+  }
+  .day-num {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #7C5CBF, #9B79D8);
+    color: white; font-size: 13px; font-weight: 800;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .day-theme { font-size: 15px; font-weight: 700; color: #2d2d2d; }
+  .day-body { padding: 14px 18px; }
+  .day-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .day-row:last-child { margin-bottom: 0; }
+  .day-row-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .day-row-label { font-size: 11px; color: #888; font-weight: 600; margin-bottom: 2px; }
+  .day-row-text { font-size: 13px; color: #3d3d3d; line-height: 1.6; }
+
+  /* 私密陪伴语 */
+  .private-card {
+    background: linear-gradient(135deg, #7C5CBF, #5A3FA0);
+    border-radius: 16px;
+    padding: 24px 20px;
+    margin: 16px 0;
+    color: white;
+  }
+  .private-label { font-size: 11px; opacity: .75; letter-spacing: .1em; font-weight: 700; margin-bottom: 10px; }
+  .private-text { font-size: 14px; line-height: 1.8; opacity: .95; }
+
+  /* 微信引流 */
+  .wechat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(124,92,191,.08);
+  }
+  .wechat-title { font-size: 15px; font-weight: 700; color: #2d2d2d; margin-bottom: 6px; }
+  .wechat-sub { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 14px; }
+  .wechat-id-box {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #F0EEFA; border-radius: 12px; padding: 10px 18px;
+  }
+  .wechat-id-main { font-size: 16px; font-weight: 800; color: #7C5CBF; }
+  .wechat-note { font-size: 11px; color: #888; margin-top: 8px; }
+
+  /* 返回按钮 */
+  .back-btn {
+    display: block; margin: 0 20px 20px;
+    padding: 14px;
+    background: white; color: #7C5CBF;
+    font-size: 15px; font-weight: 700;
+    border: 2px solid #7C5CBF;
+    border-radius: 50px; cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+  }
+  .back-btn:hover { background: #7C5CBF; color: white; }
+
+  /* 打印 */
+  @media print {
+    body { background: white; }
+    #selector-page { display: none !important; }
+    #guide-page { display: block !important; }
+    .back-btn { display: none; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .day-card, .private-card, .wechat-card, .intention-card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 选择页 -->
+<div id="selector-page">
+  <div class="logo-row">
+    <svg width="22" height="22" viewBox="0 0 80 80" fill="none">
+      <path d="M32 4 L35.5 27.5 L59 31 L35.5 34.5 L32 58 L28.5 34.5 L5 31 L28.5 27.5 Z" fill="#7C5CBF"/>
+      <path d="M56 18 L58 31 L71 33 L58 35 L56 48 L54 35 L41 33 L54 31 Z" fill="#F4B942"/>
+    </svg>
+    <span class="logo-text">Q-Lab 生命导航系统</span>
+  </div>
+  <h1 class="sel-title" style="margin-top:24px">选择你的行动类型</h1>
+  <p class="sel-sub">完成测评后，选择你的类型<br>即可生成专属7天行动指南</p>
+
+  <div class="type-grid">
+    <div class="type-card" onclick="selectType('fire')">
+      <div class="emoji">🔥</div>
+      <div class="cname">火焰型</div>
+      <div class="csub">启动者</div>
+    </div>
+    <div class="type-card" onclick="selectType('water')">
+      <div class="emoji">💧</div>
+      <div class="cname">水流型</div>
+      <div class="csub">感受者</div>
+    </div>
+    <div class="type-card" onclick="selectType('earth')">
+      <div class="emoji">🌱</div>
+      <div class="cname">土壤型</div>
+      <div class="csub">孕育者</div>
+    </div>
+    <div class="type-card" onclick="selectType('wind')">
+      <div class="emoji">🌬</div>
+      <div class="cname">风启型</div>
+      <div class="csub">灵感者</div>
+    </div>
+    <div class="type-card" onclick="selectType('star')">
+      <div class="emoji">⭐</div>
+      <div class="cname">星核型</div>
+      <div class="csub">意义驱动者</div>
+    </div>
+    <div class="type-card" onclick="selectType('moon')">
+      <div class="emoji">🌙</div>
+      <div class="cname">月影型</div>
+      <div class="csub">安全寻求者</div>
+    </div>
+    <div class="type-card" onclick="selectType('sun')" style="grid-column: 1/-1; max-width: 200px; margin: 0 auto; width: 100%;">
+      <div class="emoji">☀️</div>
+      <div class="cname">日常型</div>
+      <div class="csub">现实整合者</div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled onclick="showGuide()">生成我的7天指南 →</button>
+</div>
+
+<!-- 指南页 -->
+<div id="guide-page">
+  <div class="cover">
+    <div class="cover-badge">Q-Lab 专属陪伴</div>
+    <div class="cover-emoji" id="g-emoji"></div>
+    <div class="cover-type" id="g-name"></div>
+    <div class="cover-sub" id="g-sub"></div>
+    <div class="cover-keywords" id="g-keywords"></div>
+    <div class="cover-footer">你的7天觉知行动指南</div>
+  </div>
+
+  <div class="guide-body">
+    <div class="intention-card">
+      <div class="intention-label">✦ 这7天的核心意图</div>
+      <div class="intention-text" id="g-intention"></div>
+    </div>
+
+    <div class="section-label">✦ 7天行动日历</div>
+    <div id="g-days"></div>
+
+    <div class="private-card">
+      <div class="private-label">✦ 写给你的私密陪伴语</div>
+      <div class="private-text" id="g-private"></div>
+    </div>
+
+  </div>
+
+  <button class="back-btn" onclick="goBack()">← 重新选择类型</button>
+</div>
+
+<script>
+const TYPES = {
+  fire: {
+    emoji: '🔥', name: '火焰型', sub: '｜启动者',
+    keywords: ['点火快', '行动力强', '容易透支'],
+    intention: '「我用真实的节奏，点燃持久的火。」',
+    private: '亲爱的火，你的热烈是这个世界需要的。但我想轻轻提醒你——你不需要靠燃烧来证明自己值得被看见。你停下来的那一刻，你的光并没有消失，它只是在充电。允许自己慢一次，不是退缩，是为了下一次燃烧得更真实。相信你的节奏，相信休息也是显化的一部分。',
+    days: [
+      { theme: '启动一件小事', morning: '问自己：今天我最想开始的一件事是什么？', action: '用10分钟启动它——不要求完美，启动就是成功。', reflection: '今天我启动了什么？感觉怎么样？' },
+      { theme: '给能量设边界', morning: '问自己：我现在的状态是几分？（1-10）', action: '选一件事「只做30分钟就停下来」，感受有边界地前进。', reflection: '停下来的感觉是轻松还是焦虑？这告诉了我什么？' },
+      { theme: '从激情到规律', morning: '回顾：上周我做了哪些让自己真正兴奋的事？', action: '把其中一件事设成本周的固定行动（哪怕每天5分钟）。', reflection: '什么样的行动，我愿意每天都做？' },
+      { theme: '休息也是显化', morning: '今天给自己一个「不需要努力」的时段。', action: '睡一觉、散步20分钟，或者发呆——有意识地放松。', reflection: '休息之后，我有没有感到更清晰？' },
+      { theme: '真实vs表演', morning: '问自己：我现在的行动，是发自内心，还是给别人看的？', action: '选一件只为自己做的事，不发朋友圈，不告诉任何人。', reflection: '只为自己做一件事，是什么感觉？' },
+      { theme: '为透支设预警', morning: '列出3个信号：当我出现这些状态，说明我透支了。', action: '把这3个信号写下来贴在显眼处，当作自己的觉察提醒。', reflection: '过去我透支的时候，我是怎么对待自己的？' },
+      { theme: '庆祝7天的你', morning: '看看这7天，我做到了什么？哪怕一个小小的行动。', action: '为自己做一件喜欢的事，不需要理由，就是庆祝。', reflection: '下一个7天，我最想带走的一个习惯是什么？' }
+    ]
+  },
+  water: {
+    emoji: '💧', name: '水流型', sub: '｜感受者',
+    keywords: ['共振强', '直觉准', '容易分散'],
+    intention: '「我收回流向外界的能量，为自己建一条河道。」',
+    private: '亲爱的水，你的感受力是礼物，不是负担。当你停止为别人的情绪负责，当你把那些漂流在外的注意力收回来，你会发现自己拥有一种非常稳定的力量。你不需要感受更少，你只需要学会为自己的感受建一条河道。选一个方向，让自己流进去。你比你以为的，更有方向感。',
+    days: [
+      { theme: '感受自己的感受', morning: '早晨醒来，身体有什么感觉？不评判，只是注意。', action: '写下3个此刻真实的感受词（不是"应该有"的感受）。', reflection: '今天有没有哪个感受特别强烈？它在告诉我什么？' },
+      { theme: '找回属于我的能量', morning: '问：昨天我的能量，有多少花在自己身上？有多少给了别人？', action: '今天有意识地为自己做一件事，不是给任何人看。', reflection: '为自己做的这件事，我有没有感到内疚？为什么？' },
+      { theme: '直觉练习', morning: '今天早上，你的第一个直觉是什么？先写下来。', action: '跟随一个小小的直觉——不管是吃什么、走哪条路还是联系谁。', reflection: '跟随直觉之后，发生了什么？' },
+      { theme: '选一个方向，流进去', morning: '最近有没有一件事你一直"感觉"很重要却没开始？', action: '用30分钟做这件事，不追求结果，只感受做这件事的感觉。', reflection: '做的时候，我有没有找到一种"对"的感觉？' },
+      { theme: '情绪边界', morning: '回想最近一次被别人的情绪带走——那是什么情况？', action: '写下你的「情绪边界宣言」：我可以关心你，但我不需要替你感受。', reflection: '保持情绪边界，对我最难的部分是什么？' },
+      { theme: '让感受力成为优势', morning: '你的感受力帮助过你什么？列出3个例子。', action: '把这份清单分享给一个你信任的人，或者写进日记。', reflection: '当我把感受力当成优势时，我感觉如何？' },
+      { theme: '7天总结：我是谁', morning: '这7天，我对自己有了什么新的了解？', action: '写一段话：我是一个____的人，我的方向是____。', reflection: '下一步，我最想做什么？' }
+    ]
+  },
+  earth: {
+    emoji: '🌱', name: '土壤型', sub: '｜孕育者',
+    keywords: ['稳定', '长期', '慢热但扎实'],
+    intention: '「我相信每一步都算数，慢，是我的节奏，不是缺陷。」',
+    private: '亲爱的土壤，我想让你知道——你已经做到的，比你以为的多得多。那些「不起眼」的坚持，那些「算不上什么」的小步骤，它们都是真实的积累。你不需要变成火，也不需要变成风，你就是你，而你这种方式，能长出最深根的东西。相信慢，相信稳，相信你走的每一步都算数。',
+    days: [
+      { theme: '看见已有的积累', morning: '回顾过去3个月，我做到了哪些"不大但真实"的事？', action: '写一份「我已经做到了」清单，至少10条，哪怕很小。', reflection: '看完这份清单，我有什么感受？' },
+      { theme: '设一个小目标', morning: '这7天，我想往前走一步的事是什么？', action: '把这个目标拆成7天的行动，每天只做一小步。', reflection: '今天的一小步，我做了什么？' },
+      { theme: '允许自己慢启动', morning: '今天不需要大步跑，允许自己"慢热"。', action: '用最小的行动开始今天的目标——哪怕只有5分钟。', reflection: '慢慢开始，有没有比冲动开始更舒服？' },
+      { theme: '看见自己的力量', morning: '问：我做得最扎实的一件事是什么？', action: '把这件事分享给一个人（可以是家人朋友），让自己被看见。', reflection: '被看见的感觉怎么样？我有没有想要低调掉过去？' },
+      { theme: '稳定胜过爆发', morning: '回想一次：你的稳定帮助了别人，或者帮助了自己。', action: '今天用你最舒服的方式推进一件事，不逼自己加速。', reflection: '如果我一直保持这个节奏，一年后会在哪里？' },
+      { theme: '长期愿景', morning: '我现在做的事情，5年后会产生什么？', action: '写下你的一个长期愿景，越具体越好。', reflection: '这个愿景让我感到兴奋还是害怕？为什么？' },
+      { theme: '7天收获', morning: '这7天我坚持了什么？哪怕只坚持了一次。', action: '给自己一个真实的奖励（不是物质，是体验）。', reflection: '我从这7天学到的最重要的一件事是什么？' }
+    ]
+  },
+  wind: {
+    emoji: '🌬', name: '风启型', sub: '｜灵感者',
+    keywords: ['想法多', '视野广', '落地弱'],
+    intention: '「我选择一个，全力落地它。」',
+    private: '亲爱的风，我知道你的灵感有多丰富，多渴望探索所有的可能性。但请记住，不是所有想法都需要同时被实现。选择一个，专注它，完成它，这比同时开始十个却一个都没完成要好得多。你的想法是你的礼物，但只有落地，它才能真正成为现实。相信你的选择，相信你的执行能力。',
+    days: [
+      { theme: '想法大扫除', morning: '把最近脑子里所有的想法都倒出来，写下来，不筛选。', action: '花15分钟，把所有的"我想做"全部列出来。', reflection: '列完之后，我感觉轻松了还是更乱了？' },
+      { theme: '选择一个', morning: '看着昨天的清单，哪一个让你感觉最「对」？', action: '只选一个，写下：接下来7天，我专注这一件。', reflection: '选完之后，我有没有想要「再换一个」？这说明什么？' },
+      { theme: '把想法变成第一步', morning: '昨天选的那件事，最小的第一步是什么？', action: '今天只做第一步，20分钟，完成就算赢。', reflection: '完成第一步之后，我感觉怎样？' },
+      { theme: '对抗分心', morning: '今天有没有新的想法进来想吸引我？', action: '把新想法记到「灵感待定清单」，然后继续专注当前的事。', reflection: '我有没有成功守住专注？哪里最难？' },
+      { theme: '找一个落地伙伴', morning: '有没有人可以每天问我"今天你做了什么"？', action: '向一个朋友发消息，请他/她7天内每天问你一次进度。', reflection: '有人监督的感觉怎么样？' },
+      { theme: '见到成果', morning: '回顾这5天，我在这件事上走了多远？', action: '把当前进度写下来，哪怕只完成了20%，也很重要。', reflection: '如果再给我7天，我能做到什么？' },
+      { theme: '完成比完美重要', morning: '这件事我能在今天推进到一个「可以交付」的状态吗？', action: '做到80分就结束，庆祝自己完成了一件事。', reflection: '「完成一件事」和「有一百个想法」，哪个感觉更踏实？' }
+    ]
+  },
+  star: {
+    emoji: '⭐', name: '星核型', sub: '｜意义驱动者',
+    keywords: ['使命感', '意义感', '为「对的事」而动'],
+    intention: '「我不需要看清全部，先走一步，意义会在路上等我。」',
+    private: '亲爱的星核，你的使命感是真实的，你对意义的渴望是你最宝贵的驱动力。但我想轻轻说——你不需要在行动前就看清全部意义。有时候，一个小行动，就是点燃方向感的那根火柴。相信你的感知，也相信「先走一步」的勇气。你的意义，会在路上等你。',
+    days: [
+      { theme: '我最在乎什么', morning: '如果只能回答一件事：我的生命最重要的是什么？', action: '写下来，不需要精准，是此刻最真实的感受。', reflection: '这件最重要的事，我现在有没有在靠近它？' },
+      { theme: '意义感的起点', morning: '回忆一件让你感到「做这件事真的有意义」的事。', action: '把这件事的细节写下来，为什么它让你有意义感？', reflection: '这个模式里，有没有关于我的方向的线索？' },
+      { theme: '走一步，不等想清楚', morning: '有没有一件事你一直觉得「有意义」但迟迟没开始？', action: '今天用30分钟只是「接触」它，不要求结果。', reflection: '接触之后，意义感有没有增强还是减弱？' },
+      { theme: '内耗减重', morning: '我现在有没有在消耗自己的地方？（过度思考/反复比较）', action: '写下3件「我可以暂时不去想的事」，放下它们今天一天。', reflection: '少想一点之后，我的状态有没有变化？' },
+      { theme: '找到同频的人', morning: '在我认识的人里，谁做的事情让我觉得「对」？', action: '联系这个人，告诉他/她你欣赏什么，或者请教一个问题。', reflection: '与有意义感的人连接，我有什么感受？' },
+      { theme: '意义和行动结合', morning: '我现在在做的一件日常事情，它和我的更大意义有什么联系？', action: '把这个联系写下来，哪怕只是微弱的联系。', reflection: '找到联系之后，这件事做起来有什么不同？' },
+      { theme: '7天总结：我的方向', morning: '这7天，我感受到的最清晰的一个方向是什么？', action: '写下一句话：我接下来要走向______，因为______。', reflection: '这句话让我感到兴奋，还是平静，还是两者都有？' }
+    ]
+  },
+  moon: {
+    emoji: '🌙', name: '月影型', sub: '｜安全寻求者',
+    keywords: ['谨慎', '自我保护', '怕失望'],
+    intention: '「我值得好事发生，我允许自己小步靠近它。」',
+    private: '亲爱的月影，我看见你有多想要，也看见你有多害怕受伤。这两件事都是真实的，都没有错。你不需要变得大胆才能前进，你只需要允许自己，在安全的范围内，多伸出一点点。每一个小小的成功，都是你重建信任的证据——对世界的信任，也对自己的信任。你值得好事发生。',
+    days: [
+      { theme: '我真正想要什么', morning: '如果不害怕失望，我最想要的是什么？', action: '写下来，不需要告诉任何人，只是诚实地对自己说。', reflection: '写完之后，我有没有感到害怕？害怕什么？' },
+      { theme: '小小地伸出去', morning: '有没有一件你想做但一直在等"时机"的事？', action: '今天用最小的方式开始它——哪怕只是搜索一下、问一个人。', reflection: '这一小步，有没有比想象中可怕？' },
+      { theme: '重写自我叙事', morning: '我最常对自己说的一句负面的话是什么？', action: '把这句话改成：也许我可以______。写下新版本。', reflection: '新版本读起来感觉怎样？有没有一点点相信？' },
+      { theme: '证据收集', morning: '回顾过去：有没有一次，我害怕了但还是做了，结果还不错？', action: '把这个例子写下来，越详细越好。', reflection: '这个例子告诉我什么关于自己的事？' },
+      { theme: '允许自己「要」', morning: '今天，允许自己提出一个需求——向朋友、家人，或者工作。', action: '说出一个你通常会憋回去的需求。', reflection: '提出之后发生了什么？和我想象的一样吗？' },
+      { theme: '安全网', morning: '如果我想做的事情失败了，最坏会怎样？我能应对吗？', action: '把最坏的情况写下来，然后写出应对方案。', reflection: '想清楚最坏的情况之后，我还害怕吗？' },
+      { theme: '7天：我做到了', morning: '这7天，我有没有哪怕一次「比平时更勇敢」？', action: '把这个时刻写下来，给自己一个真心的肯定。', reflection: '下一步，我愿意再多走一步的事是什么？' }
+    ]
+  },
+  sun: {
+    emoji: '☀️', name: '日常型', sub: '｜现实整合者',
+    keywords: ['生活感', '执行力', '系统感'],
+    intention: '「我的日常是地基，我允许梦想住进来。」',
+    private: '亲爱的日光，你把生活打理得这么好，这本身就是一种了不起的能力。现在，我想邀请你做一件事：允许自己想一个「大一点」的愿望，哪怕暂时不知道怎么实现。你的脚踏实地不会消失，它会成为承载梦想的地基。相信你的日常，也相信你的梦想——它们可以住在同一个人身上。',
+    days: [
+      { theme: '优化一个日常流程', morning: '今天的日常里，哪一件事我可以做得更轻松或更高效？', action: '用10分钟优化它，不需要完美，只需稍微好一点。', reflection: '优化之后，我感觉省出了什么？' },
+      { theme: '为梦想留10分钟', morning: '有没有一件事我一直想做但总是「等有时间再说」？', action: '今天给它留10分钟，就10分钟，其他时间照常。', reflection: '10分钟够吗？这件事让我感觉怎样？' },
+      { theme: '写下一个「如果可以…」', morning: '如果什么都不是问题，我最想要的生活是什么样的？', action: '写一段「如果可以…」的描述，越具体越好，不审查自己。', reflection: '写完之后，有没有什么让你感到心跳加速？' },
+      { theme: '尝试一个新方法', morning: '今天选一件事，用一种你没试过的方式来做。', action: '改变一个习惯的顺序，或者换一个工具、换一个地点。', reflection: '新方法带来了什么感受？' },
+      { theme: '把梦想放进日程', morning: '昨天写的「如果可以」里，有没有一件事可以放进日程？', action: '把它加进这周的计划，哪怕只是30分钟。', reflection: '排进日程之后，这件事感觉更真实了吗？' },
+      { theme: '记录一个改变', morning: '这5天里，我注意到了什么关于自己的新的事？', action: '把这个发现写下来，它可能很小，但它是真实的。', reflection: '这个发现对我接下来的行动有什么影响？' },
+      { theme: '为自己庆祝', morning: '这7天，我做到了什么？不要只看没做的。', action: '为自己做一件喜欢的事，不附加任何条件，就是庆祝。', reflection: '一年后的自己，会感谢今天的我做了什么？' }
+    ]
+  }
+};
+
+let selectedType = null;
+
+function selectType(key) {
+  selectedType = key;
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  document.getElementById('start-btn').disabled = false;
+}
+
+function showGuide() {
+  if (!selectedType) return;
+  const t = TYPES[selectedType];
+
+  document.getElementById('g-emoji').textContent = t.emoji;
+  document.getElementById('g-name').textContent  = t.name;
+  document.getElementById('g-sub').textContent   = t.sub;
+  document.getElementById('g-intention').textContent = t.intention;
+  document.getElementById('g-private').textContent   = t.private;
+
+  const kw = document.getElementById('g-keywords');
+  kw.innerHTML = t.keywords.map(k => `<span class="kw-tag">${k}</span>`).join('');
+
+  const daysEl = document.getElementById('g-days');
+  daysEl.innerHTML = t.days.map((d, i) => `
+    <div class="day-card">
+      <div class="day-header">
+        <div class="day-num">D${i+1}</div>
+        <div class="day-theme">${d.theme}</div>
+      </div>
+      <div class="day-body">
+        <div class="day-row">
+          <div class="day-row-icon">🌅</div>
+          <div>
+            <div class="day-row-label">早晨意图</div>
+            <div class="day-row-text">${d.morning}</div>
+          </div>
+        </div>
+        <div class="day-row">
+          <div class="day-row-icon">⚡</div>
+          <div>
+            <div class="day-row-label">今日行动</div>
+            <div class="day-row-text">${d.action}</div>
+          </div>
+        </div>
+        <div class="day-row">
+          <div class="day-row-icon">🌙</div>
+          <div>
+            <div class="day-row-label">晚间复盘</div>
+            <div class="day-row-text">${d.reflection}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('selector-page').style.display = 'none';
+  document.getElementById('guide-page').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  document.getElementById('selector-page').style.display = 'block';
+  document.getElementById('guide-page').style.display = 'none';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
